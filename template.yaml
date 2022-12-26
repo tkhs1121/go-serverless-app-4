@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  go-serverless-app-4
+Description: go-serverless-app-4
 
 Resources:
   Function:
@@ -9,6 +8,7 @@ Resources:
     Properties:
       FunctionName: PostAmazonURLFunction
       Handler: PostAmazonURLFunction
+      Role: !GetAtt FunctionRole.Arn
       Runtime: go1.x
       CodeUri: .
       Timeout: 60
@@ -20,7 +20,7 @@ Resources:
           Properties:
             Path: /post
             Method: POST
-  db:
+  Table:
     Type: AWS::Serverless::SimpleTable
     Properties:
       PrimaryKey:
@@ -30,14 +30,23 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
-
-Outputs:
-  API:
-    Description: "API Gateway"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Dev/go-serverless-app-4/"
-  PostFunction:
-    Description: "Lambda Function ARN"
-    Value: !GetAtt PostFunction.Arn
-  PostFunctionIamRole:
-    Description: "Implicit IAM Role created for Post function"
-    Value: !GetAtt PostFunctionRole.Arn
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyName: DynamoDBPutItemPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource: !GetAtt Table.Arn
