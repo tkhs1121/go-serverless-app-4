@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  go-serverless-app-4
+
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: PostAmazonURLFunction
+      Handler: PostAmazonURLFunction
+      Runtime: go1.x
+      CodeUri: .
+      Timeout: 60
+      Architectures:
+        - x86_64
+      Events:
+        CatchAll:
+          Type: Api
+          Properties:
+            Path: /post
+            Method: POST
+  db:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: Number
+      TableName: table
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+Outputs:
+  API:
+    Description: "API Gateway"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Dev/go-serverless-app-4/"
+  PostFunction:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt PostFunction.Arn
+  PostFunctionIamRole:
+    Description: "Implicit IAM Role created for Post function"
+    Value: !GetAtt PostFunctionRole.Arn
